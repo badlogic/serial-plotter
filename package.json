@@ -1,0 +1,48 @@
+{
+  "name": "serial-plotter",
+  "displayName": "serial-plotter",
+  "description": "Plot data received via a serial port in a dedicated pane.",
+  "version": "1.0.0",
+  "repository": "https://github.com/badlogic/serial-plotter",
+  "publisher": "badlogicgames",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.81.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./build/main.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "category": "Serial Plotter",
+        "command": "serialplotter.open",
+        "title": "Open pane"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build-extension -- --minify && npm run build-webview -- --minify",
+    "build-extension": "esbuild ./src/extension.ts --bundle --outfile=build/main.js --external:vscode --format=cjs --platform=node --sourcemap=inline",
+    "build-webview": "esbuild ./src/webview.ts --bundle --outfile=build/webview.js --format=iife --platform=browser --sourcemap=inline",
+    "watch": "concurrently \"npm run build-extension -- --watch\" \"npm run build-webview -- --watch\""
+  },
+  "devDependencies": {
+    "@types/node": "22.4.0",
+    "@types/vscode": "1.81.0",
+    "@vscode/test-electron": "2.4.1",
+    "concurrently": "^8.2.2",
+    "esbuild": "0.23.0",
+    "typescript": "5.5.4"
+  },
+  "dependencies": {
+    "@serialport/parser-readline": "^12.0.0",
+    "chart.js": "^4.4.3",
+    "lit": "^2.8.0",
+    "serialport": "^12.0.0"
+  }
+}
