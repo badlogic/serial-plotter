@@ -1,9 +1,6 @@
-import { LitElement, PropertyValueMap, TemplateResult, html, nothing, render } from "lit";
+import { LitElement, PropertyValueMap, html, nothing } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { map } from "lit/directives/map.js";
-import { Chart, ChartConfiguration, registerables } from "chart.js";
-
-Chart.register(...registerables);
 
 interface VSCodeApi {
 	postMessage(data: ProtocolRequests): void;
@@ -453,17 +450,7 @@ class PlotView extends LitElement {
 		this.scrollOffset = maxSamples - this.visibleSamples / 2;
 	}
 
-	lastTime = performance.now();
-	deltaElement!: HTMLSpanElement;
 	renderData() {
-		if (!this.deltaElement) {
-			this.deltaElement = this.querySelector<HTMLSpanElement>("#delta")!;
-		}
-		const now = performance.now();
-		const delta = now - this.lastTime;
-		this.lastTime = now;
-		this.deltaElement.textContent = delta.toFixed(2) + "ms";
-
 		if (!this.isConnected) {
 			return;
 		}
@@ -619,7 +606,6 @@ class PlotView extends LitElement {
 				<div style="resize: vertical; overflow: auto; width: 100%; height: 400px;">
 					<canvas style="display: block; width: 100%; height: 100%;"></canvas>
 				</div>
-				<span id="delta"></span>
 			</div>
 		`;
 	}

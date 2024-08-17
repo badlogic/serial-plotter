@@ -27,9 +27,11 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run build-extension -- --minify && npm run build-webview -- --minify",
-    "build-extension": "esbuild ./src/extension.ts --bundle --outfile=build/main.js --external:vscode --format=cjs --platform=node --sourcemap=inline",
-    "build-webview": "esbuild ./src/webview.ts --bundle --outfile=build/webview.js --format=iife --platform=browser --sourcemap=inline",
-    "watch": "concurrently \"npm run build-extension -- --watch\" \"npm run build-webview -- --watch\""
+    "build-extension": "esbuild ./src/extension.ts --bundle --outfile=build/main.js --external:vscode --format=cjs --platform=node",
+    "build-webview": "esbuild ./src/webview.ts --bundle --outfile=build/webview.js --format=iife --platform=browser",
+    "watch": "concurrently \"npm run copy-prebuilds\" \"npm run build-extension -- --watch --sourcemap=inline\" \"npm run build-webview -- --watch --sourcemap=inline\"",
+    "copy-prebuilds": "cp -r node_modules/@serialport/bindings-cpp/prebuilds ./",
+    "package": "npm run copy-prebuilds && vsce package && rm -rf ./prebuilds"
   },
   "devDependencies": {
     "@types/node": "22.4.0",
@@ -41,8 +43,8 @@
   },
   "dependencies": {
     "@serialport/parser-readline": "^12.0.0",
-    "chart.js": "^4.4.3",
     "lit": "^2.8.0",
-    "serialport": "^12.0.0"
+    "serialport": "12.0.0",
+    "@serialport/bindings-cpp": "12.0.1"
   }
 }
