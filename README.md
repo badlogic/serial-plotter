@@ -1,24 +1,29 @@
+I will add that back:
+
+---
+
 # Serial Plotter
-VS Code extension to plot data received via a serial port, e.g. from an Arduino connected via USB. Goes well together with the VS Code PlatformIO extension.
+VS Code extension for plotting data received via a serial port, such as from an Arduino connected via USB. It pairs well with the VS Code PlatformIO extension.
 
-## Data & formatting
-The serial plotter displays numerical data received via the serial port. It expects the data from the device to be submitted using a line based format, where each line is terminated with `\r\n`. Each line meant to be interpreted by the serial plotter must start with a `>` and end with `\r\n`. In between those delimiters, you can have one or more `variable_name:value` pairs, separated by a coma. Variable names can be made of any sequence of UTF-8 characters, except `:`. Values should be integers or decimal numbers with a `.` as the decimal point. E.g.:
+## Data & Formatting
+The serial plotter displays numerical data received via the serial port. It expects the device to send data in a line-based format, with each line ending in `\r\n`. Lines meant for the plotter must start with `>`, followed by one or more `variable_name:value` pairs separated by commas, and ending with `\r\n`. Variable names can be any UTF-8 sequence except `:`. Values should be integers or decimal numbers using `.` as the decimal point. For example:
 
-`>pin0:0.0342,brightness:234,temp:25.7\r\n`
-`>pin0:2.34,brightness:200\r\n`
-`>pin0:10,brightness:12\r\n`
+```
+>pin0:0.0342,brightness:234,temp:25.7\r\n
+>pin0:2.34,brightness:200\r\n
+>pin0:10,brightness:12\r\n
+```
 
-The serial plotter will ignore all lines not starting with `>`.
+The plotter ignores lines that don't start with `>`.
 
-When the serial plotter sees a new line starting with `>`, it will:
+Upon receiving a valid line:
+1. It parses all `variable_name:value` pairs.
+2. The values are added to their corresponding variable's list.
+3. If a variable from a previous line isn't in the new one, its last value is appended to keep all variable lists synchronized.
 
-1. Parse out all `variable_name:value` pairs.
-2. For each variable/value pair, the value is added to the list of values previously recorded for the variable.
-3. For variables previously seen but not found in the new line, the serial plotter will take the last value recorded for the variable, and append it to the variables list of previously recorded values.
+This method maintains equal data lengths for each variable without needing timestamps.
 
-Step 3 ensures that the lists of values of each variable all have the same number of values in them. It's a poor man's way to ensure things are in sync without needing any timestamps.
-
-Here's a simple sketch to illustrate the device side communication of data via the serial port:
+Example of device-side communication:
 
 ```cpp
 void setup() {
@@ -48,34 +53,30 @@ void loop() {
 }
 ```
 
-The serial port is set up with a baud rate of `112500` bauds. In `loop()`, a new line for the serial plotter is emitted, with 3 variables `var1`, `var2`, and `var3`, with values generated from scaled and offset sine waves. After the line intended for the serial plotter, another line is emitted, which the plotter will ignore, as it does not start with `\r\n`.
+The baud rate is set to `112500`. In `loop()`, a new line with `var1`, `var2`, and `var3` is emitted, using scaled sine waves as values. Another line, ignored by the plotter, is emitted afterward.
 
-## Opening the plotter
-In VS Code, press `CTRL + SHIFT + P` (`CMD + SHIFT + P` on macOS) to bring up the command palette. Type the first few characters of `Serial Plotter: Open pane` and select the command from the palette. The Pane will open.
+## Opening the Plotter
+In VS Code, press `CTRL + SHIFT + P` (`CMD + SHIFT + P` on macOS) to open the command palette. Type `Serial Plotter: Open pane` and select the command. The pane will open.
 
-## Selecting port & baud rate
+## Selecting Port & Baud Rate
 
 ![docs/pane-1.png](docs/pane-1.png)
 
-You will see the port and baud rate selector. Select the port you want to monitor from the drop down list. If you connected your device after opening the pane, click the refresh button next to the drop down. Your newly connected device should now be available in the drop down.
-
-Select the baud rate to use. It must be the same as the baud rate you configured on your connected device.
+Choose your port from the dropdown list. If you connected your device after opening the pane, click the refresh button. Select the correct baud rate to match your device configuration.
 
 ## Monitoring
-After selecting the port and baud rate, click `Start` to start monitoring. For the program above, you may see something like this.
+After selecting the port and baud rate, click `Start`. You may see output like this:
 
 ![docs/pane-2.png](docs/pane-2.png)
 
-Serial plotter will try to connect to the specified port and wait for lines to arrive. It will display the raw serial data in the `Raw` panel at the top. This panel is limited to the last 1000 lines received from the serial port.
+The serial plotter connects to the port and waits for incoming data. The `Raw` panel shows the last 1000 lines of raw serial data. The `Variables` pane displays all variables encountered, including their min, max, and current values.
 
-The `Variables` pane shows all variables that have been encountered, including their min, max, and current value.
+A plot pane shows all variables from the first data line by default. Use checkboxes to show or hide variables. Uncheck `auto-scroll` to manually inspect the data. You can drag the plot left or right to explore the data further. Adjust the `zoom` slider to change the sample range (from 10 to 1000), that is, the number of samples visible in the plot. Use `Close` to close the plot.
 
-By default, a plot pane will also be displayed, showing all variables that have been mentioned in the first data line. You can use the checkboxes next to a variable to hide or show its data in the plot. Uncheck the `auto-scroll` checkbox, then drag the plot left or right to manually inspect the data. Use the `zoom` slider to show more or less samples in the plot (minimum 10, maximum 1000). Use the `Close` button to close the plot.
+You can add more plots with the `Add plot` button.
 
-You can add additional plots by clicking the `Add plot` button.
+Click `Stop` to stop monitoring. You can still review the data from the stopped session.
 
-Stop monitoring by clicking the `Stop` button at the top of the pane. You will still be able to inspect the data from the session you just stopped.
-
-## Known issues
-* A serial port can only be used by a single process. You can not monitor and e.g. upload a new program to an Arduino at the same time. If serial plotter can not connect to a serial port, make sure it's not used by another process. Conversely, if e.g. you can not upload a new program to your Arduino via PlatformIO or the Arduino IDE, make sure serial plotter is currently not monitoring the serial port of the Arduino.
-* If you create multiple plots with specific variable selections, you have to recreate them if you start a new monitoring session.
+## Known Issues
+- A serial port can only be accessed by one process at a time. You cannot monitor a port and upload a program to the Arduino simultaneously. Ensure no other process is using the port if the plotter can't connect. Similarly, if you're having trouble uploading to the Arduino, make sure the serial plotter isn't monitoring the port.
+- If you create multiple plots with specific variable selections, they need to be recreated when starting a new session.

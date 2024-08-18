@@ -2,7 +2,7 @@
   "name": "serial-plotter",
   "displayName": "serial-plotter",
   "description": "Plot data received via a serial port in a dedicated pane.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "repository": "https://github.com/badlogic/serial-plotter",
   "publisher": "badlogicgames",
   "icon": "icon.png",
