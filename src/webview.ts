@@ -186,18 +186,44 @@ class SerialPlotter extends LitElement {
 		lines.forEach((line) => {
 			const greaterThanMatches = (line.match(/>/g) || []).length;
 			if (line.startsWith(">") && greaterThanMatches === 1) {
+				const mentionedVariables = new Set<string>();
 				const variables = line.slice(1).split(",");
+
+				const maxLength = Math.max(...Array.from(this.variableMap.values(), (values) => values.length), 0);
+
 				variables.forEach((variable) => {
 					const match = variable.match(/(\w+):\s*(-?\d+(\.\d+)?)/);
 					if (match) {
 						const variableName = match[1];
 						const value = parseFloat(match[2]);
 						let values = this.variableMap.get(variableName) ?? [];
+
+						if (values.length < maxLength) {
+							const padding = Array(maxLength - values.length).fill(null);
+							values = [...padding, ...values];
+						}
+
 						values.push(value);
+
 						if (values.length > 1000000) {
 							values = values.slice(-1000000);
 							this.samplesExceeded = true;
 						}
+
+						this.variableMap.set(variableName, values);
+						mentionedVariables.add(variableName);
+					}
+				});
+
+				this.variableMap.forEach((values, variableName) => {
+					if (!mentionedVariables.has(variableName)) {
+						const lastValue = values[values.length - 1];
+						values.push(lastValue);
+						if (values.length > 1000000) {
+							values = values.slice(-1000000);
+							this.samplesExceeded = true;
+						}
+
 						this.variableMap.set(variableName, values);
 					}
 				});
@@ -344,9 +370,9 @@ class PlotView extends LitElement {
 	@property()
 	lineWidth = 2;
 	@property({ type: Number })
-	visibleSamples = 100; // Defines the number of samples visible in the viewport
+	visibleSamples = 100;
 	@property()
-	scrollOffset = (this.visibleSamples - 1) / 2; // Start so the first sample is at the left edge of the viewport
+	scrollOffset = (this.visibleSamples - 1) / 2;
 	autoScroll = true;
 	maxSamples = 1000000;
 	selectedVariables: Set<string> = new Set();
@@ -430,7 +456,7 @@ class PlotView extends LitElement {
 		if (this.isDragging && !this.autoScroll) {
 			const deltaX = event.clientX - this.startDragX;
 			const pixelsPerSample = this.canvas.clientWidth / (this.visibleSamples - 1);
-			this.scrollOffset = this.startScrollOffset - deltaX / pixelsPerSample; // Adjust scrollOffset in sample space
+			this.scrollOffset = this.startScrollOffset - deltaX / pixelsPerSample;
 		}
 	}
 
@@ -502,7 +528,7 @@ class PlotView extends LitElement {
 		// If auto-scroll is enabled, update scrollOffset to smoothly interpolate towards the latest sample
 		if (this.autoScroll && maxSamples > this.visibleSamples) {
 			const targetScrollOffset = maxSamples - this.visibleSamples / 2;
-			this.scrollOffset = (this.scrollOffset * 0.4 + targetScrollOffset * 0.6);
+			this.scrollOffset = this.scrollOffset * 0.4 + targetScrollOffset * 0.6;
 		}
 		// Draw Y-axis labels
 		ctx.save();
@@ -532,12 +558,11 @@ class PlotView extends LitElement {
 		ctx.fillStyle = "#aaa";
 		ctx.font = `${scaledFontSize}px Arial`;
 
-		const labelWidthPx = 96 * dpr; // Estimated width of each label in pixels
+		const labelWidthPx = 96 * dpr;
 		const numXLabels = Math.floor(w / labelWidthPx);
 		const step = Math.ceil(this.visibleSamples / numXLabels);
 
 		for (let i = startSample; i <= endSample; i++) {
-			// Calculate the x-position of each sample based on scrollOffset
 			const x = padding + (i - this.scrollOffset + this.visibleSamples / 2) * pixelsPerSample;
 
 			if (x >= padding && x <= w - padding && i % step === 0) {
@@ -554,16 +579,20 @@ class PlotView extends LitElement {
 			ctx.lineWidth = lineWidth;
 			ctx.save();
 			ctx.beginPath();
+			let hasStarted = false;
 
 			for (let i = startSample; i <= endSample && i < line.length; i++) {
 				const value = line[i];
-				const x = padding + (i - this.scrollOffset + this.visibleSamples / 2) * pixelsPerSample; // Map sample space to pixel space
-				const y = h - labelPadding - padding - (value - min) * scaleY;
+				if (value != null) {
+					const x = padding + (i - this.scrollOffset + this.visibleSamples / 2) * pixelsPerSample; // Map sample space to pixel space
+					const y = h - labelPadding - padding - (value - min) * scaleY;
 
-				if (i === startSample) {
-					ctx.moveTo(x, y);
-				} else {
-					ctx.lineTo(x, y);
+					if (!hasStarted) {
+						ctx.moveTo(x, y);
+						hasStarted = true;
+					} else {
+						ctx.lineTo(x, y);
+					}
 				}
 			}
 

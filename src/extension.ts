@@ -9,15 +9,14 @@ let port: SerialPort | undefined;
 export async function activate(context: vscode.ExtensionContext) {
 	initLog();
 
-	const ports = await SerialPort.list();
-
 	const command = vscode.commands.registerCommand("serialplotter.open", () => {
 		if (panel) {
 			panel.reveal(vscode.ViewColumn.One);
 		} else {
 			panel = vscode.window.createWebviewPanel("serialPlotter", "Serial Plotter", vscode.ViewColumn.One, {
 				enableScripts: true,
-				localResourceRoots: [vscode.Uri.file(context.extensionPath)]
+				localResourceRoots: [vscode.Uri.file(context.extensionPath)],
+				retainContextWhenHidden: true
 			});
 
 			panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
