@@ -2,7 +2,7 @@
   "name": "serial-plotter",
   "displayName": "serial-plotter",
   "description": "Plot data received via a serial port in a dedicated pane.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": "https://github.com/badlogic/serial-plotter",
   "publisher": "badlogicgames",
   "icon": "icon.png",
@@ -31,7 +31,8 @@
     "build-webview": "esbuild ./src/webview.ts --bundle --outfile=build/webview.js --format=iife --platform=browser",
     "watch": "concurrently \"npm run copy-prebuilds\" \"npm run build-extension -- --watch --sourcemap=inline\" \"npm run build-webview -- --watch --sourcemap=inline\"",
     "copy-prebuilds": "cp -r node_modules/@serialport/bindings-cpp/prebuilds ./",
-    "package": "npm run copy-prebuilds && vsce package && rm -rf ./prebuilds"
+    "package": "npm run copy-prebuilds && vsce package",
+    "publish": "npm run copy-prebuilds && vscode:prepublish && vsce publish"
   },
   "devDependencies": {
     "@types/node": "22.4.0",

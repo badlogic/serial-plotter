@@ -584,7 +584,7 @@ class PlotView extends LitElement {
 			for (let i = startSample; i <= endSample && i < line.length; i++) {
 				const value = line[i];
 				if (value != null) {
-					const x = padding + (i - this.scrollOffset + this.visibleSamples / 2) * pixelsPerSample; // Map sample space to pixel space
+					const x = padding + (i - this.scrollOffset + this.visibleSamples / 2) * pixelsPerSample;
 					const y = h - labelPadding - padding - (value - min) * scaleY;
 
 					if (!hasStarted) {
