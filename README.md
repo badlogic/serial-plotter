@@ -1,7 +1,3 @@
-I will add that back:
-
----
-
 # Serial Plotter
 VS Code extension for plotting data received via a serial port, such as from an Arduino connected via USB. It pairs well with the VS Code PlatformIO extension.
 
