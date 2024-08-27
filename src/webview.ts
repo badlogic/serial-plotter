@@ -123,7 +123,9 @@ class PortSelector extends LitElement {
 						<option value="57600">57600</option>
 						<option value="115200">115200</option>
 						<option value="128000">128000</option>
-						<option value="25600">256000</option>
+						<option value="256000">256000</option>
+						<option value="460800">460800</option>
+						<option value="921600">921600</option>
 					</select>
 					<button id="start" @click="${this.handleStartStop}">${this.running ? "Stop" : "Start"}</button>
 				</div>
@@ -139,6 +141,8 @@ class SerialPlotter extends LitElement {
 	private variableMap: Map<string, number[]> = new Map<string, number[]>();
 	private stopped = false;
 	private autoScrollEnabled = true;
+	@state()
+	private hideData = false;
 	@property()
 	samplesExceeded = false;
 
@@ -170,7 +174,7 @@ class SerialPlotter extends LitElement {
 			baudRate: this.baudRate
 		};
 		vscode.postMessage(request);
-		raw.textContent = this.lineBuffer.join("\n");
+		raw.textContent = this.lineBuffer.filter((line) => this.hideData && line.trim().startsWith(">")).join("\n");
 	}
 
 	processData(data: string, raw: HTMLElement, variables: VariablesView) {
@@ -179,8 +183,8 @@ class SerialPlotter extends LitElement {
 		const lines = data.split("\r\n").filter((line) => line.trim() !== "");
 		this.lineBuffer.push(...lines);
 
-		if (this.lineBuffer.length > 1000) {
-			this.lineBuffer = this.lineBuffer.slice(-1000);
+		if (this.lineBuffer.length > 100000) {
+			this.lineBuffer = this.lineBuffer.slice(-100000);
 		}
 
 		lines.forEach((line) => {
@@ -230,7 +234,7 @@ class SerialPlotter extends LitElement {
 			}
 		});
 
-		raw.textContent = this.lineBuffer.join("\n");
+		raw.textContent = this.lineBuffer.filter((line) => this.hideData ? !line.trim().startsWith(">") : true).slice(-1000).join("\n");
 		variables.requestUpdate();
 		this.querySelector("#root")
 			?.querySelectorAll<PlotView>("plot-view")
@@ -265,6 +269,10 @@ class SerialPlotter extends LitElement {
 		this.autoScrollEnabled = this.querySelector<HTMLInputElement>("#autoscroll")?.checked ?? true;
 	}
 
+	handleHideShowData() {
+		this.hideData = this.querySelector<HTMLInputElement>("#hidedata")?.checked ?? true;
+	}
+
 	handleClearRaw() {
 		this.lineBuffer.length = 0;
 	}
@@ -287,6 +295,7 @@ class SerialPlotter extends LitElement {
 					<div style="display: flex; gap: 1rem; justify-items: center; align-items: center;">
 						<span style="font-size: 1.25rem; font-weight: 600">Raw</span>
 						<label><input id="autoscroll" type="checkbox" @change=${this.handlePauseAutoScroll} checked />Auto-scroll</label>
+						<label><input id="hidedata" type="checkbox" @change=${this.handleHideShowData} />Hide data lines</label>
 						<button id="clearraw" @click=${this.handleClearRaw}>Clear</button>
 					</div>
 					<pre style="resize: vertical; overflow: auto; height: 10rem; width: 100%; margin: 0;"><code id="raw"></code></pre>

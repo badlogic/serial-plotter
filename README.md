@@ -65,7 +65,7 @@ After selecting the port and baud rate, click `Start`. You may see output like t
 
 ![docs/pane-2.png](docs/pane-2.png)
 
-The serial plotter connects to the port and waits for incoming data. The `Raw` panel shows the last 1000 lines of raw serial data. The `Variables` pane displays all variables encountered, including their min, max, and current values.
+The serial plotter connects to the port and waits for incoming data. The `Raw` panel shows the last 1000 lines of raw serial data. Use the `Hide data lines` checkbox to toggle showing lines starting with `>`. The `Variables` pane displays all variables encountered, including their min, max, and current values.
 
 A plot pane shows all variables from the first data line by default. Use checkboxes to show or hide variables. Uncheck `auto-scroll` to manually inspect the data. You can drag the plot left or right to explore the data further. Adjust the `zoom` slider to change the sample range (from 10 to 1000), that is, the number of samples visible in the plot. Use `Close` to close the plot.
 
