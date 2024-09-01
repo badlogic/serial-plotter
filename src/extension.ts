@@ -103,7 +103,7 @@ async function processProtocolMessage(message: ProtocolRequests) {
 				port.close();
 				port = undefined;
 			}
-			port = new SerialPort({ path: message.port, baudRate: message.baudRate }, (err) => {
+			port = new SerialPort({ path: message.port, baudRate: message.baudRate, lock: false }, (err) => {
 				if (err) {
 					info("Error on port " + message.port + ", closing.");
 					port?.close();
