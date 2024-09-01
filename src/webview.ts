@@ -275,6 +275,8 @@ class SerialPlotter extends LitElement {
 
 	handleClearRaw() {
 		this.lineBuffer.length = 0;
+		const raw = this.querySelector<HTMLElement>("#raw")!;
+		raw.textContent = this.lineBuffer.filter((line) => this.hideData ? !line.trim().startsWith(">") : true).slice(-1000).join("\n");
 	}
 
 	handleAddPlot() {
